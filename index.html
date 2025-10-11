@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinthe</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+        }
+        #game {
+            border: 4px solid #fff;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            background: #fff;
+        }
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(2, 60px);
+            gap: 10px;
+        }
+        button {
+            background: #fff;
+            border: 2px solid #333;
+            border-radius: 8px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #up { grid-column: 2; grid-row: 1; }
+        #left { grid-column: 1; grid-row: 2; }
+        #down { grid-column: 2; grid-row: 2; }
+        #right { grid-column: 3; grid-row: 2; }
+    </style>
+</head>
+<body>
+    <canvas id="game"></canvas>
+    <div class="controls">
+        <button id="up">↑</button>
+        <button id="left">←</button>
+        <button id="down">↓</button>
+        <button id="right">→</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+
+        // Configuration
+        const TILE_SIZE = 20;
+        const ROWS = 25;
+        const COLS = 25;
+        canvas.width = COLS * TILE_SIZE;
+        canvas.height = ROWS * TILE_SIZE;
+
+        // Maze based on your screenshot (1 = wall, 0 = path, 2 = exit)
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [0,0,0,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,1,0,1],
+            [1,1,0,1,0,1,1,1,1,1,0,0,1,1,1,1,0,1,1,1,1,0,1,0,1],
+            [1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,0,1,0,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+            [1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
+            [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
+            [1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1],
+            [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+            [1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+            [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,2],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        let player = { x: 0, y: 1 };
+
+        function drawMaze() {
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    let cell = maze[y][x];
+                    let px = x * TILE_SIZE;
+                    let py = y * TILE_SIZE;
+
+                    if (cell === 1) {
+                        // wall
+                        ctx.fillStyle = "#2c3e50";
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeStyle = "#1a252f";
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(px, py, TILE_SIZE, TILE_SIZE);
+                    } else if (cell === 2) {
+                        // exit
+                        ctx.fillStyle = "#ffd700";
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = "#ffed4e";
+                        ctx.fillRect(px + 3, py + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                    } else {
+                        // path
+                        ctx.fillStyle = "#ecf0f1";
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+            }
+
+            // Draw player
+            ctx.fillStyle = "#e74c3c";
+            ctx.beginPath();
+            ctx.arc(
+                player.x * TILE_SIZE + TILE_SIZE / 2,
+                player.y * TILE_SIZE + TILE_SIZE / 2,
+                TILE_SIZE / 2.5,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Player outline
+            ctx.strokeStyle = "#c0392b";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function move(dx, dy) {
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            
+            if (newY < 0 || newY >= ROWS || newX < 0 || newX >= COLS) return;
+            
+            const target = maze[newY][newX];
+
+            if (target === 1) return;
+
+            if (target === 2) {
+                player.x = newX;
+                player.y = newY;
+                drawMaze();
+                setTimeout(() => {
+                    alert("🎉 FÉLICITATIONS ! Tu as réussi ce labyrinthe !");
+                }, 100);
+                return;
+            }
+
+            player.x = newX;
+            player.y = newY;
+            drawMaze();
+        }
+
+        // Keyboard controls
+        window.addEventListener("keydown", (e) => {
+            e.preventDefault();
+            if (e.key === "ArrowUp") move(0, -1);
+            if (e.key === "ArrowDown") move(0, 1);
+            if (e.key === "ArrowLeft") move(-1, 0);
+            if (e.key === "ArrowRight") move(1, 0);
+        });
+
+        // Touch buttons
+        document.getElementById("up").addEventListener("click", () => move(0, -1));
+        document.getElementById("left").addEventListener("click", () => move(-1, 0));
+        document.getElementById("down").addEventListener("click", () => move(0, 1));
+        document.getElementById("right").addEventListener("click", () => move(1, 0));
+
+        // Initial draw
+        drawMaze();
+    </script>
+</body>
+</html>
