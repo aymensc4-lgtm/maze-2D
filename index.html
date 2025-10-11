@@ -2,121 +2,103 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Labyrinthe</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
         }
         body {
-            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            justify-content: space-between;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: Arial, sans-serif;
-            overflow: hidden;
+            padding: 10px;
         }
-        #game-container {
+        #game-wrapper {
+            flex: 1;
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
             width: 100%;
-            max-width: 600px;
+            max-height: calc(100vh - 180px);
         }
         #game {
             border: 3px solid #fff;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
             border-radius: 8px;
             background: #fff;
-            width: 100%;
-            height: auto;
-            max-width: 100%;
-            touch-action: none;
+            display: block;
         }
         .controls {
-            margin-top: 15px;
             display: grid;
-            grid-template-columns: repeat(3, 70px);
-            grid-template-rows: repeat(2, 70px);
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
+            margin-bottom: 10px;
         }
         button {
             background: #fff;
-            border: 2px solid #333;
-            border-radius: 12px;
-            font-size: 28px;
+            border: 3px solid #333;
+            border-radius: 15px;
+            font-size: 32px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             -webkit-tap-highlight-color: transparent;
-        }
-        button:hover {
-            background: #f0f0f0;
+            touch-action: manipulation;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         button:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
             background: #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         #up { grid-column: 2; grid-row: 1; }
         #left { grid-column: 1; grid-row: 2; }
         #down { grid-column: 2; grid-row: 2; }
         #right { grid-column: 3; grid-row: 2; }
-        
-        @media (max-width: 600px) {
-            body {
-                padding: 5px;
-            }
-            #game {
-                border: 2px solid #fff;
-            }
-            .controls {
-                grid-template-columns: repeat(3, 60px);
-                grid-template-rows: repeat(2, 60px);
-                gap: 8px;
-                margin-top: 10px;
-            }
-            button {
-                font-size: 24px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div id="game-container">
+    <div id="game-wrapper">
         <canvas id="game"></canvas>
-        <div class="controls">
-            <button id="up">↑</button>
-            <button id="left">←</button>
-            <button id="down">↓</button>
-            <button id="right">→</button>
-        </div>
+    </div>
+    <div class="controls">
+        <button id="up">↑</button>
+        <button id="left">←</button>
+        <button id="down">↓</button>
+        <button id="right">→</button>
     </div>
 
     <script>
         const canvas = document.getElementById("game");
         const ctx = canvas.getContext("2d");
 
-        // Configuration responsive
+        // Configuration
         const ROWS = 21;
         const COLS = 21;
-        
-        function resizeCanvas() {
-            const container = document.getElementById('game-container');
-            const maxWidth = Math.min(container.clientWidth, 600);
-            const TILE_SIZE = Math.floor(maxWidth / COLS);
-            canvas.width = COLS * TILE_SIZE;
-            canvas.height = ROWS * TILE_SIZE;
-            return TILE_SIZE;
-        }
-        
-        let TILE_SIZE = resizeCanvas();
+        let TILE_SIZE;
 
-        // Labyrinthe de ton image (1 = mur, 0 = chemin, 2 = sortie)
+        // Labyrinthe (1 = mur, 0 = chemin, 2 = sortie)
         const maze = [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             [0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,1],
@@ -143,6 +125,20 @@
 
         let player = { x: 0, y: 1 };
 
+        function resizeCanvas() {
+            const wrapper = document.getElementById('game-wrapper');
+            const availableWidth = wrapper.clientWidth - 20;
+            const availableHeight = wrapper.clientHeight - 20;
+            
+            const tileByWidth = Math.floor(availableWidth / COLS);
+            const tileByHeight = Math.floor(availableHeight / ROWS);
+            
+            TILE_SIZE = Math.min(tileByWidth, tileByHeight, 30);
+            
+            canvas.width = COLS * TILE_SIZE;
+            canvas.height = ROWS * TILE_SIZE;
+        }
+
         function drawMaze() {
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
@@ -162,7 +158,7 @@
                         ctx.fillStyle = "#ffd700";
                         ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
                         ctx.fillStyle = "#ffed4e";
-                        ctx.fillRect(px + 3, py + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                        ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                     } else {
                         // chemin
                         ctx.fillStyle = "#ecf0f1";
@@ -229,12 +225,31 @@
         document.getElementById("down").addEventListener("click", () => move(0, 1));
         document.getElementById("right").addEventListener("click", () => move(1, 0));
 
-        // Dessiner au démarrage
+        // Empêcher le zoom sur double-tap
+        let lastTap = 0;
+        document.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) {
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
+
+        // Redimensionner et dessiner
         window.addEventListener('resize', () => {
-            TILE_SIZE = resizeCanvas();
+            resizeCanvas();
             drawMaze();
         });
         
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                resizeCanvas();
+                drawMaze();
+            }, 100);
+        });
+
+        resizeCanvas();
         drawMaze();
     </script>
 </body>
