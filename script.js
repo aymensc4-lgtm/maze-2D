@@ -16,7 +16,6 @@ const timerElement = document.getElementById("timer");
 levelElement.textContent = "Niveau " + level;
 
 // ---------- GÉNÉRATION LABYRINTHE ----------
-
 function genererLabyrintheAleatoire(lignes, colonnes) {
     const labyrinthe = Array.from({ length: lignes }, () =>
         Array.from({ length: colonnes }, () => 1)
@@ -61,7 +60,6 @@ function genererLabyrintheAleatoire(lignes, colonnes) {
 let maze = genererLabyrintheAleatoire(ROWS, COLS);
 
 // ---------- CANVAS + AFFICHAGE ----------
-
 function resizeCanvas() {
     const wrapper = document.getElementById("game-wrapper");
     const availableWidth = wrapper.clientWidth - 20;
@@ -123,20 +121,18 @@ function drawMaze() {
     );
     ctx.fill();
 
-    // Contour joueur
     ctx.strokeStyle = "#c0392b";
     ctx.lineWidth = 2;
     ctx.stroke();
 }
 
-// ---------- TIMER / MINUTEUR ----------
-
+// ---------- TIMER ----------
 let tempsRestant = 120;
 let interval = null;
 let jeuActif = true;
 
 function demarrerMinuteur() {
-    if (interval) return; // déjà lancé
+    if (interval) return;
 
     interval = setInterval(() => {
         tempsRestant--;
@@ -161,7 +157,6 @@ function resetMinuteur() {
 }
 
 // ---------- DÉPLACEMENT ----------
-
 function move(dx, dy) {
     if (!jeuActif) return;
 
@@ -171,7 +166,7 @@ function move(dx, dy) {
     if (newY < 0 || newY >= ROWS || newX < 0 || newX >= COLS) return;
 
     const target = maze[newY][newX];
-    if (target === 1) return; // mur
+    if (target === 1) return;
 
     // Sortie
     if (target === 2) {
@@ -191,15 +186,12 @@ function move(dx, dy) {
 }
 
 // ---------- NIVEAUX ----------
-
 function setLevel() {
     level++;
     levelElement.textContent = "Niveau " + level;
 
-    // Reset minuteur à chaque niveau
-    resetMinuteur();
+    // On NE reset PAS le timer !
 
-    // Augmenter la taille du labyrinthe
     const MAX_SIZE = 51;
     if (ROWS + 2 <= MAX_SIZE && COLS + 2 <= MAX_SIZE) {
         ROWS += 2;
@@ -213,9 +205,8 @@ function setLevel() {
     drawMaze();
 }
 
-// ---------- CONTRÔLES ----------
 
-// Clavier (PC)
+// ---------- CONTRÔLES ----------
 window.addEventListener("keydown", (e) => {
     if (!jeuActif) return;
 
@@ -240,23 +231,19 @@ window.addEventListener("keydown", (e) => {
             break;
     }
 
-    if (handled) {
-        e.preventDefault();
-    }
+    if (handled) e.preventDefault();
 });
 
-// Boutons (PC + mobile)
+// Boutons tactiles + PC
 function bindControl(id, dx, dy) {
     const btn = document.getElementById(id);
     if (!btn) return;
 
-    // Souris (PC)
     btn.addEventListener("click", (e) => {
         e.preventDefault();
         move(dx, dy);
     });
 
-    // Tactile (mobile) – plus réactif
     btn.addEventListener(
         "touchstart",
         (e) => {
@@ -273,7 +260,6 @@ bindControl("left", -1, 0);
 bindControl("right", 1, 0);
 
 // ---------- REDIMENSIONNEMENT ----------
-
 window.addEventListener("resize", () => {
     resizeCanvas();
     drawMaze();
@@ -287,7 +273,6 @@ window.addEventListener("orientationchange", () => {
 });
 
 // ---------- INITIALISATION ----------
-
 resetMinuteur();
 resizeCanvas();
 drawMaze();
