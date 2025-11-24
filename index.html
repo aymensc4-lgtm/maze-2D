@@ -18,6 +18,28 @@
             overflow: hidden;
             position: fixed;
         }
+        #level-display {
+    
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(202, 6, 6, 0.781);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px 20px;
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            user-select: none;
+}
+
+        
+
         body {
             display: flex;
             flex-direction: column;
@@ -76,19 +98,46 @@
         #left { grid-column: 1; grid-row: 2; }
         #down { grid-column: 2; grid-row: 2; }
         #right { grid-column: 3; grid-row: 2; }
+        #hud {
+  position: absolute;
+  top: 10px;
+  left: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px 15px;
+  border-radius: 10px;
+  color: white;
+  font-family: "Courier New", monospace;
+  font-size: 16px;
+  z-index: 10;
+  user-select: none;
+}
+
+#timer {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+
     </style>
 </head>
 <body>
     <div id="game-wrapper">
+        <h2 id="level-display">Niveau 1</h2>
         <canvas id="game"></canvas>
     </div>
     <div class="controls">
         <button id="up">↑</button>
         <button id="left">←</button>
         <button id="down">↓</button>
-        <button id="right">→</button>
-        
-    </div> 
-    <script src="script.js"></script>
+        <button id="right">→</button>  
+        <div id="hud">
+        <div id="level-display">Niveau 1</div>
+        <div id="timer">⏱ 120s</div>
+        <script src="script.js"></script>
+    </div>
+
 </body>
 </html>
